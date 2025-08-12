@@ -1,0 +1,29 @@
+
+sequenceDiagram
+    participant Main as __main__
+    participant Detector as LDCD_KNN
+    participant Embed as _embed
+    participant Init as initialize
+    participant Score as _knn_score
+    participant Update as update
+
+    Main->>Detector: __init__(l, k, n, m)
+    Main->>Detector: fit_predict(series)
+    Detector->>Embed: _embed(series)
+    Embed-->>Detector: embedded
+    Detector->>Init: initialize(embedded)
+    loop calibration data
+        Init->>Score: _knn_score(point, training_set)
+        Score-->>Init: score
+    end
+    Init-->>Detector: training_set, calibration_scores
+    loop burn-in period
+        Detector-->>Detector: fill NaN scores
+    end
+    loop new data points
+        Detector->>Update: update(new_point)
+        Update->>Score: _knn_score(point, training_set)
+        Score-->>Update: score
+        Update-->>Detector: anomaly_score
+    end
+    Detector-->>Main: scores
